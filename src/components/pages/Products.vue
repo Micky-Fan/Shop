@@ -58,7 +58,7 @@
                         </div>
                         <div class="form-group">
                         <label for="customFile">或 上傳圖片
-                            <i class="fas fa-spinner fa-spin"></i>
+                            <i class="fas fa-spinner fa-spin" v-if="status.fileloading"></i>
                         </label>
                         <input type="file" id="customFile" class="form-control"
                             ref="files" @change="upLoad">
@@ -166,6 +166,9 @@ export default {
             tempProduct:{},
             isNew:true,
             isLoading:false,
+            status:{
+                fileloading:false,
+            },
         }
     },
     methods:{
@@ -181,7 +184,8 @@ export default {
                     });
         },
         openModal(isNew,item){
-            if(this.isNew){
+            // console.log(item);
+            if(isNew){
               this.tempProduct={};
               this.isNew=true;  
             }else{
@@ -197,14 +201,16 @@ export default {
             const formData = new FormData();
             formData.append('file-to-upload',uploadFile);
             const url=`${process.env.APIPATH}api/${process.env.CUSTOMPATH}/admin/upload`;
+            vm.status.fileloading=true;
             this.$http.post(url,formData,{
                 headers:{
                     "Content-Type":"multipart/form-data"
                 }
-            }).then((response) => {
+            }).then((response) => {    
             console.log(response.data);
+            vm.status.fileloading=false;
             if(response.data.success){
-                vm.$set(vm.tempProduct,'imageUrl',response.data.imageUrl);
+            vm.$set(vm.tempProduct,'imageUrl',response.data.imageUrl);
             }
                     });
         },
