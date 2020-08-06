@@ -21,8 +21,8 @@
                 <tr v-for="(item) in products" :key="item.id">
                     <td>{{item.category}}</td>
                     <td>{{item.title}}</td>
-                    <td class="text-right">{{item.origin_price}}</td>
-                    <td class="text-right">{{item.price}}</td>
+                    <td class="text-right">{{item.origin_price | currency}}</td>
+                    <td class="text-right">{{item.price | currency}}</td>
                     <td>
                         <span v-if="item.is_enabled">啟用</span>
                         <span v-else>未啟用</span>
@@ -36,6 +36,7 @@
                 </tr>
             </tbody>
         </table>
+                <Pagination @pageEmit="getProducts" :paginationData="pagination"></Pagination>
         <div class="modal fade" id="productModal" tabindex="-1" role="dialog"
             aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
@@ -158,8 +159,11 @@
 
 <script>
 import $ from 'jquery';
-
+import Pagination from './Pagination'
 export default {
+    components:{
+      Pagination,
+    },
     data(){
         return{
             products:[],
@@ -169,11 +173,12 @@ export default {
             status:{
                 fileloading:false,
             },
+            pagination:{},
         }
     },
     methods:{
-        getProducts(){
-            const api=`${process.env.APIPATH}api/${process.env.CUSTOMPATH}/products`;
+        getProducts(page=1){
+            const api=`${process.env.APIPATH}api/${process.env.CUSTOMPATH}/products?page=${page}}`;
             const vm = this;
             vm.isLoading = true;
             // console.log(process.env.CUSTOMPATH);
@@ -181,16 +186,17 @@ export default {
             console.log(response.data);
             vm.isLoading = false;
             vm.products = response.data.products;
+            vm.pagination = response.data.pagination;
                     });
         },
-        openModal(isNew,item){
+        openModal(NewOrNot,item){
             // console.log(item);
-            if(isNew){
+            if(NewOrNot){
               this.tempProduct={};
-              this.isNew=true;  
+              this.isNew=true;
             }else{
                 this.tempProduct=Object.assign({},item);
-                this.isNew=false;
+               this.isNew=false;
             }
             $('#productModal').modal('show');
         },
@@ -211,6 +217,9 @@ export default {
             vm.status.fileloading=false;
             if(response.data.success){
             vm.$set(vm.tempProduct,'imageUrl',response.data.imageUrl);
+             this.$bus.$emit('message:push','上傳成功','success');
+            }else{
+                this.$bus.$emit('message:push',response.data.message,'danger');
             }
                     });
         },
@@ -220,9 +229,8 @@ export default {
             const vm = this;
             if(!vm.isNew){
                 api=`${process.env.APIPATH}api/${process.env.CUSTOMPATH}/admin/product/${vm.tempProduct.id}`;
-                httpMethod="put";
+                httpMethod="put";                                
             }
-           
             this.$http[httpMethod](api , {data:vm.tempProduct}).then((response) => {
             console.log(response.data);
             if(response.data.success){
@@ -235,6 +243,7 @@ export default {
             }
             
                     });
+            
         }, 
         openDelModal(item) {
       this.tempProduct = item;
@@ -242,10 +251,9 @@ export default {
     },
         deletProduct() {
             let vm=this;
-        
             let api =`${process.env.APIPATH}api/${process.env.CUSTOMPATH}/admin/product/${vm.tempProduct.id}`;
             this.$http.delete(api).then((response) => {
-            console.log(response.data.success);
+            console.log(response.data.message);
             if(response.data.success){
                 $('#delProductModal').modal('hide');
                 vm.getProducts();
@@ -258,8 +266,8 @@ export default {
     },         
    
         }, created() {
-        this.getProducts();
-  
+        this.getProducts(); 
+        
     }
 
 }

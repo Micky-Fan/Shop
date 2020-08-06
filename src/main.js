@@ -9,10 +9,17 @@ import 'vue-loading-overlay/dist/vue-loading.css';
 
 import App from './App'
 import router from './router'
+import './bus';
+import VeeValidate from 'vee-validate';
+import currencyFilter from './filter/currency'
+import timestampFilter from './filter/date'
 // import { axios } from 'vue/types/umd'
 Vue.use(VueAxios, axios);
 Vue.config.productionTip = false;
 Vue.component('Loading',Loading);
+Vue.filter('currency',currencyFilter);
+Vue.filter('date',timestampFilter)
+Vue.use(VeeValidate);
 
 axios.defaults.withCredentials = true;
 /* eslint-disable no-new */
